@@ -1,4 +1,4 @@
-# YARIKIRU（やりきり）
+# YARIKIRU（やりきる）
 
 「宣言するから、逃げられない。進捗が見えるから、続けられる。」をコンセプトにした、iOS向けの目標宣言・達成管理アプリです。本リポジトリは **SwiftUI製のiOSクライアント** のソースコードです。
 
@@ -123,10 +123,6 @@ YARIKIRUは、その日に「やりきる」と決めた目標を登録し、達
 - プライバシーポリシー: https://atsuta1120.github.io/yarikiru-support/privacy.html
 - App Store: 審査中のため未公開（TODO: 要確認 — 公開後にURLを追記）
 - バックエンドリポジトリ: https://github.com/atsuta1120/yarikiri_app
-
-## 画面イメージ
-
-TODO: 要確認 — スクリーンショットは未追加です。App Store公開後に追加予定です。
 
 ## ライセンス・注意事項
 

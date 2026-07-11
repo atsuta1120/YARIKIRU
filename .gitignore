@@ -1,0 +1,30 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/
+*.xcuserstate
+*.xcuserdatad/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# CocoaPods (未使用だが将来的な混入対策)
+Pods/
+
+# macOS
+.DS_Store
+
+# Environment / secrets
+.env
+.env.local
+*.p8
+*.p12
+*.mobileprovision

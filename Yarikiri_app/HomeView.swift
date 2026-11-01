@@ -6,17 +6,54 @@ class HomeViewModel {
     var response: GoalsResponse?
     var isLoading = true
     var error: String?
+    /// 昨日までの連続100%達成日数。履歴の取得に失敗した場合はnil
+    private var pastStreakDays: Int?
+
+    /// 今日を含めた連続100%達成日数。今日が未達でも、昨日までの連続は途切れていない扱い
+    var streakDays: Int? {
+        guard let pastStreakDays, let response else { return nil }
+        let isTodayAchieved = !response.goals.isEmpty && response.progressPercent >= 100
+        return pastStreakDays + (isTodayAchieved ? 1 : 0)
+    }
 
     func load() async {
         isLoading = true
         error = nil
+        async let history = try? APIService.shared.fetchHistory()
         do {
             response = try await APIService.shared.fetchGoals()
         } catch {
             self.error = "読み込みに失敗しました"
             print("HomeViewModel error:", error)
         }
+        if let response, let history = await history {
+            pastStreakDays = Self.countPastStreak(today: response.today, history: history.history)
+        } else {
+            pastStreakDays = nil
+        }
         isLoading = false
+    }
+
+    /// 昨日から遡って、達成率100%の日が何日続いているかを数える。目標を立てなかった日で途切れる
+    private static func countPastStreak(today: String, history: [HistoryDay]) -> Int {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd"
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+
+        guard var date = formatter.date(from: today) else { return 0 }
+        let progressByDate = Dictionary(history.map { ($0.date, $0.progress) }, uniquingKeysWith: { first, _ in first })
+        var streak = 0
+        while let previous = calendar.date(byAdding: .day, value: -1, to: date),
+              let progress = progressByDate[formatter.string(from: previous)],
+              progress >= 100 {
+            streak += 1
+            date = previous
+        }
+        return streak
     }
 
     func toggle(goal: Goal) async {
@@ -50,6 +87,7 @@ struct HomeView: View {
     @State private var vm = HomeViewModel()
     @State private var showAddGoal = false
     @State private var editingGoal: Goal?
+    @State private var shareCardData: ShareCardData?
 
     var body: some View {
         NavigationStack {
@@ -60,6 +98,17 @@ struct HomeView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             progressCard(res: res)
+                            if !res.goals.isEmpty {
+                                HStack {
+                                    Spacer()
+                                    Button {
+                                        shareCardData = ShareCardData.declaration(from: res)
+                                    } label: {
+                                        Label("宣言をシェア", systemImage: "square.and.arrow.up")
+                                            .font(.subheadline)
+                                    }
+                                }
+                            }
                             ForEach(res.goals) { goal in
                                 goalCard(goal: goal)
                             }
@@ -94,6 +143,9 @@ struct HomeView: View {
             .sheet(item: $editingGoal) { goal in
                 EditGoalView(goal: goal) { Task { await vm.load() } }
             }
+            .sheet(item: $shareCardData) { data in
+                SharePreviewView(data: data)
+            }
         }
     }
 
@@ -113,6 +165,23 @@ struct HomeView: View {
                 Text("難易度が高い程進捗への貢献が大きくなります")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+            }
+            if let streakDays = vm.streakDays, streakDays > 0 {
+                Label("\(streakDays)日連続で100%達成中", systemImage: "flame.fill")
+                    .font(.subheadline)
+                    .bold()
+                    .foregroundStyle(.orange)
+            }
+            if !res.goals.isEmpty {
+                Button {
+                    shareCardData = ShareCardData.achievement(from: res, streakDays: vm.streakDays ?? 0)
+                } label: {
+                    Label("達成結果をシェア", systemImage: "square.and.arrow.up")
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .padding(.top, 4)
             }
         }
         .padding()

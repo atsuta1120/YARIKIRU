@@ -88,6 +88,7 @@ struct HomeView: View {
     @State private var showAddGoal = false
     @State private var editingGoal: Goal?
     @State private var shareCardData: ShareCardData?
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -129,6 +130,11 @@ struct HomeView: View {
             }
             .navigationTitle("やりきること")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showAddGoal = true } label: {
                         Image(systemName: "plus")
@@ -145,6 +151,9 @@ struct HomeView: View {
             }
             .sheet(item: $shareCardData) { data in
                 SharePreviewView(data: data)
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView { Task { await vm.load() } }
             }
         }
     }

@@ -94,4 +94,22 @@ final class APIService {
         let response = try JSONDecoder().decode(TagsResponse.self, from: data)
         return response.tags
     }
+
+    // MARK: - Settings
+
+    func fetchSettings() async throws -> UserSettings {
+        let url = URL(string: "\(baseURL)/api/settings/")!
+        let (data, _) = try await session.data(from: url)
+        return try JSONDecoder().decode(UserSettings.self, from: data)
+    }
+
+    func updateSettings(_ settings: UserSettings) async throws -> UserSettings {
+        let url = URL(string: "\(baseURL)/api/settings/")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(settings)
+        let (data, _) = try await session.data(for: request)
+        return try JSONDecoder().decode(UserSettings.self, from: data)
+    }
 }

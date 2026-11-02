@@ -98,3 +98,11 @@ struct ReactResponse: Codable {
     let reacted: Bool
     let count: Int
 }
+
+struct UserSettings: Codable {
+    var resetHour: Int
+
+    enum CodingKeys: String, CodingKey {
+        case resetHour = "reset_hour"
+    }
+}

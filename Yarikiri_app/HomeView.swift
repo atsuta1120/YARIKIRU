@@ -227,6 +227,12 @@ struct HomeView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    if let objectiveTitle = goal.objectiveTitle {
+                        Label(objectiveTitle, systemImage: "flag")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer()

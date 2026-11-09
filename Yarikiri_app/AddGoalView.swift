@@ -8,6 +8,7 @@ struct AddGoalView: View {
     @State private var difficulty = "medium"
     @State private var tag = "未分類"
     @State private var tags: [TagChoice] = []
+    @State private var objectiveId: Int?
     @State private var isLoading = false
     @State private var error: String?
 
@@ -40,6 +41,8 @@ struct AddGoalView: View {
                         }
                     }
                 }
+
+                ObjectiveLinkSection(objectiveId: $objectiveId)
 
                 if let error {
                     Section {
@@ -74,7 +77,8 @@ struct AddGoalView: View {
             _ = try await APIService.shared.addGoal(
                 title: title.trimmingCharacters(in: .whitespaces),
                 difficulty: difficulty,
-                tag: tag
+                tag: tag,
+                objectiveId: objectiveId
             )
             onSaved()
             dismiss()

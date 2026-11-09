@@ -12,6 +12,9 @@ struct Goal: Codable, Identifiable {
     var viewCount: Int
     var reactionCounts: [String: ReactionInfo]
     var isMine: Bool?
+    /// 紐づく中期・長期の目標
+    var objectiveId: Int?
+    var objectiveTitle: String?
 
     enum CodingKeys: String, CodingKey {
         case id, title, difficulty, weight, tag, date
@@ -20,6 +23,8 @@ struct Goal: Codable, Identifiable {
         case viewCount = "view_count"
         case reactionCounts = "reaction_counts"
         case isMine = "is_mine"
+        case objectiveId = "objective_id"
+        case objectiveTitle = "objective_title"
     }
 }
 
@@ -104,5 +109,79 @@ struct UserSettings: Codable {
 
     enum CodingKeys: String, CodingKey {
         case resetHour = "reset_hour"
+    }
+}
+
+/// 中期・長期の目標。長期 → 中期 → 日々の目標（Goal）の3階層で紐づく
+struct Objective: Codable, Identifiable {
+    let id: Int
+    var title: String
+    var level: String
+    var parentId: Int?
+    var deadline: String
+    var daysLeft: Int
+    var isDone: Bool
+    var tag: String
+    let createdAt: String
+    var dailyTotal: Int
+    var dailyDone: Int
+    var reactionCounts: [String: ReactionInfo]
+    var viewCount: Int
+    var isMine: Bool
+
+    var levelLabel: String { level == "long" ? "長期" : "中期" }
+
+    /// 期限までの残りを表す文言
+    var deadlineLabel: String {
+        if isDone { return "達成！" }
+        if daysLeft > 0 { return "あと\(daysLeft)日" }
+        if daysLeft == 0 { return "今日まで" }
+        return "期限切れ（\(-daysLeft)日超過）"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, level, deadline, tag
+        case parentId = "parent_id"
+        case daysLeft = "days_left"
+        case isDone = "is_done"
+        case createdAt = "created_at"
+        case dailyTotal = "daily_total"
+        case dailyDone = "daily_done"
+        case reactionCounts = "reaction_counts"
+        case viewCount = "view_count"
+        case isMine = "is_mine"
+    }
+}
+
+/// タグ別タイムラインの中期・長期の目標
+struct TimelineObjectivesResponse: Codable {
+    let tag: String
+    var objectives: [Objective]
+}
+
+struct ObjectivesResponse: Codable {
+    let today: String
+    var objectives: [Objective]
+}
+
+/// API の日付（yyyy-MM-dd）と Date の変換
+enum APIDate {
+    private static let formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    static func date(from string: String) -> Date? { formatter.date(from: string) }
+    static func string(from date: Date) -> String { formatter.string(from: date) }
+
+    /// 「2027/3/31」形式の表示用文字列
+    static func display(_ string: String) -> String {
+        let parts = string.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return string }
+        return "\(parts[0])/\(parts[1])/\(parts[2])"
     }
 }

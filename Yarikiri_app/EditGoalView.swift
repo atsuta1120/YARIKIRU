@@ -9,6 +9,7 @@ struct EditGoalView: View {
     @State private var difficulty: String
     @State private var tag: String
     @State private var tags: [TagChoice] = []
+    @State private var objectiveId: Int?
     @State private var isLoading = false
     @State private var error: String?
 
@@ -24,6 +25,7 @@ struct EditGoalView: View {
         _title = State(initialValue: goal.title)
         _difficulty = State(initialValue: goal.difficulty)
         _tag = State(initialValue: goal.tag)
+        _objectiveId = State(initialValue: goal.objectiveId)
     }
 
     var body: some View {
@@ -49,6 +51,8 @@ struct EditGoalView: View {
                         }
                     }
                 }
+
+                ObjectiveLinkSection(objectiveId: $objectiveId)
 
                 if let error {
                     Section {
@@ -81,7 +85,8 @@ struct EditGoalView: View {
                 id: goal.id,
                 title: title.trimmingCharacters(in: .whitespaces),
                 difficulty: difficulty,
-                tag: tag
+                tag: tag,
+                objectiveId: objectiveId
             )
             onSaved()
             dismiss()
